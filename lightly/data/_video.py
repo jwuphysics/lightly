@@ -75,7 +75,7 @@ class VideoLoader(threading.local):
 
         has_video_reader = io._HAS_VIDEO_OPT and hasattr(io, 'VideoReader')
 
-        if has_video_reader and self.backend == 'video_reader':
+        if has_video_reader and self.backend == 'video_reader' and False:
             self.reader = io.VideoReader(path = self.path)
         else:
             self.reader = None
