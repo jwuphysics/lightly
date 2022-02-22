@@ -18,6 +18,45 @@ if lightly._is_prefetch_generator_available():
     from prefetch_generator import BackgroundGenerator
 
 
+import os
+import stat
+
+_fd_types = (
+    ('REG', stat.S_ISREG),
+    ('FIFO', stat.S_ISFIFO),
+    ('DIR', stat.S_ISDIR),
+    ('CHR', stat.S_ISCHR),
+    ('BLK', stat.S_ISBLK),
+    ('LNK', stat.S_ISLNK),
+    ('SOCK', stat.S_ISSOCK)
+)
+
+def fd_table_status():
+    result = []
+    for fd in range(100):
+        try:
+            s = os.fstat(fd)
+        except:
+            continue
+        for fd_type, func in _fd_types:
+            if func(s.st_mode):
+                break
+        else:
+            fd_type = str(s.st_mode)
+        result.append((fd, fd_type))
+    return result
+
+def fd_table_status_logify(fd_table_result):
+    return ('Open file handles: ' +
+            ', '.join(['{0}: {1}'.format(*i) for i in fd_table_result]))
+
+def fd_table_status_str():
+    return fd_table_status_logify(fd_table_status())
+
+def fd_table_count():
+    return len(fd_table_status())
+
+
 class SelfSupervisedEmbedding(BaseEmbedding):
     """Implementation of self-supervised embedding models.
 
@@ -103,6 +142,8 @@ class SelfSupervisedEmbedding(BaseEmbedding):
 
         """
 
+        print('before', fd_table_count())
+
         self.model.eval()
         embeddings, labels, fnames = None, None, []
 
@@ -114,6 +155,7 @@ class SelfSupervisedEmbedding(BaseEmbedding):
         else:
             pbar = tqdm(dataloader, total=len(dataloader))
 
+        print('tqdm', fd_table_count())
         efficiency = 0.0
         embeddings = []
         labels = []
@@ -121,6 +163,8 @@ class SelfSupervisedEmbedding(BaseEmbedding):
 
             start_timepoint = time.time()
             for (img, label, fname) in pbar:
+
+                print(f'{label} ', fd_table_count())
 
                 # this following 2 lines are needed to prevent a file handler leak,
                 # see https://github.com/lightly-ai/lightly/pull/676
@@ -148,12 +192,14 @@ class SelfSupervisedEmbedding(BaseEmbedding):
                 pbar.set_description("Compute efficiency: {:.2f}".format(efficiency))
                 start_timepoint = time.time()
 
+            print('after', fd_table_count())
             embeddings = torch.cat(embeddings, 0)
             labels = torch.cat(labels, 0)
 
             embeddings = embeddings.cpu().numpy()
             labels = labels.cpu().numpy()
 
+        print('before sort', fd_table_count())
         sorted_filenames = dataloader.dataset.get_filenames()
         sorted_embeddings = sort_items_by_keys(
             fnames, embeddings, sorted_filenames
@@ -164,4 +210,5 @@ class SelfSupervisedEmbedding(BaseEmbedding):
         embeddings = np.stack(sorted_embeddings)
         labels = np.stack(sorted_labels)
 
+        print('sorted', fd_table_count())
         return embeddings, labels, sorted_filenames
