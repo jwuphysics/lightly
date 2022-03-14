@@ -49,6 +49,24 @@ download:
 	# sunflowers dataset
 	wget -N https://storage.googleapis.com/datasets_boris/Sunflowers.zip -P $(DATADIR)
 
+	# Freiburg groceries dataset
+	wget -N http://aisdatasets.informatik.uni-freiburg.de/freiburg_groceries_dataset/freiburg_groceries_dataset.tar.gz -P $(DATADIR)
+	mkdir -p datasets/freiburg_groceries_dataset && \
+		tar -xf $(DATADIR)/freiburg_groceries_dataset.tar.gz -C datasets/freiburg_groceries_dataset
+
+	# Sentinel dataset
+	wget -N https://storage.googleapis.com/datasets_boris/sentinel-2-italy-v1.tar -P $(DATADIR)
+	mkdir -p datasets/sentinel-2-italy-v1 && \
+		tar -xf $(DATADIR)/sentinel-2-italy-v1.tar -C datasets/sentinel-2-italy-v1
+
+	# Clothing dataset
+	if [ ! -d datasets/clothing_dataset ] ; then git clone https://github.com/alexeygrigorev/clothing-dataset datasets/clothing_dataset; fi
+
+	# Cifar10
+	wget -N https://storage.googleapis.com/datasets_boris/cifar10.tar -P $(DATADIR)
+	mkdir -p datasets/cifar10 && \
+		tar -xf $(DATADIR)/cifar10.tar -C datasets
+
 	# download resources for s3 integration
 	mkdir -p $(GETTING_STARTED_IMAGES)
 	wget -N https://storage.googleapis.com/datasets_boris/resources_s3_integration.zip -P $(DATADIR)
@@ -56,7 +74,7 @@ download:
 
 	# download resources for azure integration
 	wget -N https://storage.googleapis.com/datasets_boris/resources_azure_integration.zip -P $(DATADIR)
-	unzip ${ZIPOPTS} $(DATADIR)/resources_azure_integration.zip -d $(GETTING_STARTED_IMAGES)
+	unzip $(ZIPOPTS) $(DATADIR)/resources_azure_integration.zip -d $(GETTING_STARTED_IMAGES)
 
 	# download images and report for docker
 	wget -N https://storage.googleapis.com/datasets_boris/resources.zip -P $(DATADIR)
