@@ -10,7 +10,6 @@ command-line interface.
 
 import os
 import shutil
-import warnings
 
 import hydra
 from torch.utils.hipify.hipify_python import bcolors
@@ -21,9 +20,6 @@ from lightly.cli._helpers import fix_input_path, print_as_warning
 
 from lightly.api.utils import getenv
 from lightly.api.api_workflow_client import ApiWorkflowClient
-from lightly.api.bitmask import BitMask
-from lightly.openapi_generated.swagger_client import TagData, TagArithmeticsRequest, TagArithmeticsOperation, \
-    TagBitMaskResponse
 
 
 def _download_cli(cfg, is_cli_call=True):

@@ -3,6 +3,10 @@ from io import IOBase
 from typing import *
 
 import requests
+from lightly.openapi_generated.swagger_client.api.quota_api import QuotaApi
+
+from lightly.openapi_generated.swagger_client.api.scores_api import ScoresApi
+
 from lightly.api.api_workflow_tags import _TagsMixin
 from requests import Response
 
@@ -19,9 +23,6 @@ from lightly.api.bitmask import BitMask
 from lightly.api.utils import getenv
 from lightly.api.version_checking import get_minimum_compatible_version, \
     version_compare
-from lightly.openapi_generated.swagger_client import TagData, ScoresApi, \
-    QuotaApi, TagArithmeticsRequest, TagArithmeticsOperation, \
-    TagBitMaskResponse
 from lightly.openapi_generated.swagger_client.api.datasets_api import \
     DatasetsApi
 from lightly.openapi_generated.swagger_client.api.datasources_api import \
@@ -39,7 +40,7 @@ from lightly.openapi_generated.swagger_client.api.tags_api import TagsApi
 from lightly.openapi_generated.swagger_client.api_client import ApiClient
 from lightly.openapi_generated.swagger_client.configuration import \
     Configuration
-from lightly.openapi_generated.swagger_client.models.dataset_data import \
+from lightly.openapi_generated.swagger_client.model.dataset_data import \
     DatasetData
 from lightly.utils.reordering import sort_items_by_keys
 

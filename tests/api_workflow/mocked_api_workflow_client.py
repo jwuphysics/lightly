@@ -7,27 +7,49 @@ from collections import defaultdict
 import json
 
 import numpy as np
+from lightly.openapi_generated.swagger_client.api_client import ApiClient
+
+from lightly.openapi_generated.swagger_client.api.quota_api import QuotaApi
+
+from lightly.openapi_generated.swagger_client.api.versioning_api import \
+    VersioningApi
+
+from lightly.openapi_generated.swagger_client.api.samples_api import SamplesApi
+
+from lightly.openapi_generated.swagger_client.api.scores_api import ScoresApi
 from requests import Response
 from lightly.openapi_generated.swagger_client.api.docker_api import DockerApi
-from lightly.openapi_generated.swagger_client.models.create_docker_worker_registry_entry_request import CreateDockerWorkerRegistryEntryRequest
-from lightly.openapi_generated.swagger_client.models.datasource_processed_until_timestamp_response import DatasourceProcessedUntilTimestampResponse
-from lightly.openapi_generated.swagger_client.models.docker_run_data import DockerRunData
-from lightly.openapi_generated.swagger_client.models.docker_run_scheduled_create_request import DockerRunScheduledCreateRequest
-from lightly.openapi_generated.swagger_client.models.docker_run_scheduled_data import DockerRunScheduledData
-from lightly.openapi_generated.swagger_client.models.docker_run_scheduled_priority import DockerRunScheduledPriority
-from lightly.openapi_generated.swagger_client.models.docker_run_scheduled_state import DockerRunScheduledState
-from lightly.openapi_generated.swagger_client.models.docker_run_state import DockerRunState
-from lightly.openapi_generated.swagger_client.models.docker_worker_config_create_request import DockerWorkerConfigCreateRequest
-from lightly.openapi_generated.swagger_client.models.docker_worker_registry_entry_data import DockerWorkerRegistryEntryData
-from lightly.openapi_generated.swagger_client.models.docker_worker_state import DockerWorkerState
-from lightly.openapi_generated.swagger_client.models.docker_worker_type import DockerWorkerType
+from lightly.openapi_generated.swagger_client.model.create_docker_worker_registry_entry_request import CreateDockerWorkerRegistryEntryRequest
+from lightly.openapi_generated.swagger_client.model.create_entity_response import \
+    CreateEntityResponse
+from lightly.openapi_generated.swagger_client.model.datasource_processed_until_timestamp_response import DatasourceProcessedUntilTimestampResponse
+from lightly.openapi_generated.swagger_client.model.docker_run_data import DockerRunData
+from lightly.openapi_generated.swagger_client.model.docker_run_scheduled_create_request import DockerRunScheduledCreateRequest
+from lightly.openapi_generated.swagger_client.model.docker_run_scheduled_data import DockerRunScheduledData
+from lightly.openapi_generated.swagger_client.model.docker_run_scheduled_priority import DockerRunScheduledPriority
+from lightly.openapi_generated.swagger_client.model.docker_run_scheduled_state import DockerRunScheduledState
+from lightly.openapi_generated.swagger_client.model.docker_run_state import DockerRunState
+from lightly.openapi_generated.swagger_client.model.docker_worker_config_create_request import DockerWorkerConfigCreateRequest
+from lightly.openapi_generated.swagger_client.model.docker_worker_registry_entry_data import DockerWorkerRegistryEntryData
+from lightly.openapi_generated.swagger_client.model.docker_worker_state import DockerWorkerState
+from lightly.openapi_generated.swagger_client.model.docker_worker_type import DockerWorkerType
+from lightly.openapi_generated.swagger_client.model.sample_create_request import \
+    SampleCreateRequest
+from lightly.openapi_generated.swagger_client.model.sample_data import \
+    SampleData
+from lightly.openapi_generated.swagger_client.model.sample_update_request import \
+    SampleUpdateRequest
+from lightly.openapi_generated.swagger_client.model.sample_write_urls import \
+    SampleWriteUrls
+from lightly.openapi_generated.swagger_client.model.tag_arithmetics_request import \
+    TagArithmeticsRequest
 
-from lightly.openapi_generated.swagger_client.models.tag_creator import TagCreator
-from lightly.openapi_generated.swagger_client.models.dataset_create_request import DatasetCreateRequest
-from lightly.openapi_generated.swagger_client.models.dataset_data import DatasetData
+from lightly.openapi_generated.swagger_client.model.tag_creator import TagCreator
+from lightly.openapi_generated.swagger_client.model.dataset_create_request import DatasetCreateRequest
+from lightly.openapi_generated.swagger_client.model.dataset_data import DatasetData
 from lightly.openapi_generated.swagger_client.api.datasets_api import DatasetsApi
 from lightly.openapi_generated.swagger_client.api.datasources_api import DatasourcesApi
-from lightly.openapi_generated.swagger_client.models.timestamp import Timestamp
+from lightly.openapi_generated.swagger_client.model.timestamp import Timestamp
 from lightly.openapi_generated.swagger_client.rest import ApiException
 
 import lightly
@@ -36,31 +58,26 @@ from lightly.api.api_workflow_client import ApiWorkflowClient
 
 from typing import *
 
-from lightly.openapi_generated.swagger_client import ScoresApi, \
-    CreateEntityResponse, SamplesApi, SampleCreateRequest, \
-    InitialTagCreateRequest, ApiClient, VersioningApi, QuotaApi, \
-    TagArithmeticsRequest, TagBitMaskResponse, SampleWriteUrls, SampleData, \
-    Trigger2dEmbeddingJobRequest, SampleUpdateRequest
 from lightly.openapi_generated.swagger_client.api.embeddings_api import EmbeddingsApi
 from lightly.openapi_generated.swagger_client.api.jobs_api import JobsApi
 from lightly.openapi_generated.swagger_client.api.mappings_api import MappingsApi
 from lightly.openapi_generated.swagger_client.api.samplings_api import SamplingsApi
 from lightly.openapi_generated.swagger_client.api.tags_api import TagsApi
-from lightly.openapi_generated.swagger_client.models.async_task_data import AsyncTaskData
-from lightly.openapi_generated.swagger_client.models.dataset_embedding_data import DatasetEmbeddingData
-from lightly.openapi_generated.swagger_client.models.job_result_type import JobResultType
-from lightly.openapi_generated.swagger_client.models.job_state import JobState
-from lightly.openapi_generated.swagger_client.models.job_status_data import JobStatusData
-from lightly.openapi_generated.swagger_client.models.job_status_data_result import JobStatusDataResult
-from lightly.openapi_generated.swagger_client.models.sampling_create_request import SamplingCreateRequest
-from lightly.openapi_generated.swagger_client.models.tag_data import TagData
-from lightly.openapi_generated.swagger_client.models.write_csv_url_data import WriteCSVUrlData
-from lightly.openapi_generated.swagger_client.models.datasource_config import DatasourceConfig
-from lightly.openapi_generated.swagger_client.models.datasource_config_base import DatasourceConfigBase
-from lightly.openapi_generated.swagger_client.models.datasource_processed_until_timestamp_request import DatasourceProcessedUntilTimestampRequest
-from lightly.openapi_generated.swagger_client.models.datasource_raw_samples_data import DatasourceRawSamplesData
-from lightly.openapi_generated.swagger_client.models.datasource_raw_samples_data_row import DatasourceRawSamplesDataRow
-from lightly.openapi_generated.swagger_client.models.datasource_raw_samples_predictions_data import DatasourceRawSamplesPredictionsData
+from lightly.openapi_generated.swagger_client.model.async_task_data import AsyncTaskData
+from lightly.openapi_generated.swagger_client.model.dataset_embedding_data import DatasetEmbeddingData
+from lightly.openapi_generated.swagger_client.model.job_result_type import JobResultType
+from lightly.openapi_generated.swagger_client.model.job_state import JobState
+from lightly.openapi_generated.swagger_client.model.job_status_data import JobStatusData
+from lightly.openapi_generated.swagger_client.model.job_status_data_result import JobStatusDataResult
+from lightly.openapi_generated.swagger_client.model.sampling_create_request import SamplingCreateRequest
+from lightly.openapi_generated.swagger_client.model.tag_data import TagData
+from lightly.openapi_generated.swagger_client.model.write_csv_url_data import WriteCSVUrlData
+from lightly.openapi_generated.swagger_client.model.datasource_config import DatasourceConfig
+from lightly.openapi_generated.swagger_client.model.datasource_config_base import DatasourceConfigBase
+from lightly.openapi_generated.swagger_client.model.datasource_processed_until_timestamp_request import DatasourceProcessedUntilTimestampRequest
+from lightly.openapi_generated.swagger_client.model.datasource_raw_samples_data import DatasourceRawSamplesData
+from lightly.openapi_generated.swagger_client.model.datasource_raw_samples_data_row import DatasourceRawSamplesDataRow
+from lightly.openapi_generated.swagger_client.model.datasource_raw_samples_predictions_data import DatasourceRawSamplesPredictionsData
 
 
 def _check_dataset_id(dataset_id: str):
@@ -550,6 +567,7 @@ class MockedVersioningApi(VersioningApi):
 
     def get_minimum_compatible_pip_version(self, **kwargs):
         return "1.0.0"
+
 
 class MockedQuotaApi(QuotaApi):
     def get_quota_maximum_dataset_size(self, **kwargs):

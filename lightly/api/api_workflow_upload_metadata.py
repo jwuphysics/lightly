@@ -8,7 +8,7 @@ from tqdm import tqdm
 
 from lightly.api.utils import retry
 from lightly.cli._helpers import print_as_warning
-from lightly.openapi_generated.swagger_client.models.sample_update_request import \
+from lightly.openapi_generated.swagger_client.model.sample_update_request import \
     SampleUpdateRequest
 from lightly.utils.io import COCO_ANNOTATION_KEYS
 
