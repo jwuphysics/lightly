@@ -1,5 +1,7 @@
 import csv
 import io
+import random
+import string
 import tempfile
 import unittest
 from io import IOBase
@@ -22,6 +24,8 @@ from lightly.openapi_generated.swagger_client.api.docker_api import DockerApi
 from lightly.openapi_generated.swagger_client.model.create_docker_worker_registry_entry_request import CreateDockerWorkerRegistryEntryRequest
 from lightly.openapi_generated.swagger_client.model.create_entity_response import \
     CreateEntityResponse
+from lightly.openapi_generated.swagger_client.model.dataset_type import \
+    DatasetType
 from lightly.openapi_generated.swagger_client.model.datasource_processed_until_timestamp_response import DatasourceProcessedUntilTimestampResponse
 from lightly.openapi_generated.swagger_client.model.docker_run_data import DockerRunData
 from lightly.openapi_generated.swagger_client.model.docker_run_scheduled_create_request import DockerRunScheduledCreateRequest
@@ -33,6 +37,8 @@ from lightly.openapi_generated.swagger_client.model.docker_worker_config_create_
 from lightly.openapi_generated.swagger_client.model.docker_worker_registry_entry_data import DockerWorkerRegistryEntryData
 from lightly.openapi_generated.swagger_client.model.docker_worker_state import DockerWorkerState
 from lightly.openapi_generated.swagger_client.model.docker_worker_type import DockerWorkerType
+from lightly.openapi_generated.swagger_client.model.mongo_object_id import \
+    MongoObjectID
 from lightly.openapi_generated.swagger_client.model.sample_create_request import \
     SampleCreateRequest
 from lightly.openapi_generated.swagger_client.model.sample_data import \
@@ -80,9 +86,10 @@ from lightly.openapi_generated.swagger_client.model.datasource_raw_samples_data_
 from lightly.openapi_generated.swagger_client.model.datasource_raw_samples_predictions_data import DatasourceRawSamplesPredictionsData
 
 
-def _check_dataset_id(dataset_id: str):
-    assert isinstance(dataset_id, str)
-    assert len(dataset_id) > 0
+def get_random_MongoObjectID() -> str:
+    allowed_chars = "abcdef" + string.digits
+    id = ''.join(random.choices(allowed_chars, k=24))
+    return id
 
 
 N_FILES_ON_SERVER = 100
@@ -93,47 +100,40 @@ class MockedEmbeddingsApi(EmbeddingsApi):
         EmbeddingsApi.__init__(self, api_client=api_client)
         self.embeddings = [
             DatasetEmbeddingData(
-                id='embedding_id_xyz',
+                id=get_random_MongoObjectID(),
                 name='embedding_name_xxyyzz',
-                is_processed=True,
-                created_at=0,
+                isProcessed=True,
+                createdAt=0,
             ),
             DatasetEmbeddingData(
-                id='embedding_id_xyz_2',
+                id=get_random_MongoObjectID(),
                 name='default',
-                is_processed=True,
-                created_at=0,
+                isProcessed=True,
+                createdAt=0,
             )
         
         ]
 
     def get_embeddings_csv_write_url_by_id(self, dataset_id: str, **kwargs):
-        _check_dataset_id(dataset_id)
-        assert isinstance(dataset_id, str)
-        response_ = WriteCSVUrlData(signed_write_url="signed_write_url_valid", embedding_id="embedding_id_xyz")
+        response_ = WriteCSVUrlData(signed_write_url="signed_write_url_valid", embedding_id=get_random_MongoObjectID())
         return response_
 
     def get_embeddings_by_dataset_id(self, dataset_id, **kwargs) -> List[DatasetEmbeddingData]:
-        _check_dataset_id(dataset_id)
-        assert isinstance(dataset_id, str)
         return self.embeddings
 
     def trigger2d_embeddings_job(self, body, dataset_id, embedding_id, **kwargs):
-        _check_dataset_id(dataset_id)
         assert isinstance(body, Trigger2dEmbeddingJobRequest)
 
     def get_embeddings_csv_read_url_by_id(self, dataset_id, embedding_id, **kwargs):
-        _check_dataset_id(dataset_id)
         return 'https://my-embedding-read-url.com'
 
 
 class MockedSamplingsApi(SamplingsApi):
     def trigger_sampling_by_id(self, body: SamplingCreateRequest, dataset_id, embedding_id, **kwargs):
-        _check_dataset_id(dataset_id)
         assert isinstance(body, SamplingCreateRequest)
         assert isinstance(dataset_id, str)
         assert isinstance(embedding_id, str)
-        response_ = AsyncTaskData(job_id="155")
+        response_ = AsyncTaskData(jobId="155")
         return response_
 
 
@@ -146,85 +146,79 @@ class MockedJobsApi(JobsApi):
         assert isinstance(job_id, str)
         self.no_calls += 1
         if self.no_calls > 3:
-            result = JobStatusDataResult(type=JobResultType.SAMPLING, data="selection_tag_id_xyz")
-            response_ = JobStatusData(id="id_", status=JobState.FINISHED, wait_time_till_next_poll=0,
-                                      created_at=1234, finished_at=1357, result=result)
+            result = JobStatusDataResult(type=JobResultType.SAMPLING, data=get_random_MongoObjectID())
+            response_ = JobStatusData(id=get_random_MongoObjectID(), status=JobState.FINISHED, waitTimeTillNextPoll=0,
+                                      createdAt=1234, finishedAt=1357, result=result)
         else:
             result = None
-            response_ = JobStatusData(id="id_", status=JobState.RUNNING, wait_time_till_next_poll=0.001,
-                                      created_at=1234, result=result)
+            response_ = JobStatusData(id=get_random_MongoObjectID(), status=JobState.RUNNING, waitTimeTillNextPoll=0.001,
+                                      createdAt=1234, result=result)
         return response_
 
 
 class MockedTagsApi(TagsApi):
     def create_initial_tag_by_dataset_id(self, body, dataset_id, **kwargs):
-        _check_dataset_id(dataset_id)
         assert isinstance(body, InitialTagCreateRequest)
-        assert isinstance(dataset_id, str)
         response_ = CreateEntityResponse(id="xyz")
         return response_
 
     def get_tag_by_tag_id(self, dataset_id, tag_id, **kwargs):
-        _check_dataset_id(dataset_id)
-        assert isinstance(dataset_id, str)
-        assert isinstance(tag_id, str)
-        response_ = TagData(id=tag_id, dataset_id=dataset_id, prev_tag_id="initial-tag", bit_mask_data="0x80bda23e9",
-                            name='second-tag', tot_size=15, created_at=1577836800, changes=dict())
+        response_ = TagData(id=tag_id, datasetId=dataset_id, prevTagId=get_random_MongoObjectID(), bitMaskData="0x80bda23e9",
+                            name='second-tag', totSize=15, createdAt=1577836800, changes=dict())
         return response_
 
     def get_tags_by_dataset_id(self, dataset_id, **kwargs):
-        _check_dataset_id(dataset_id)
         if dataset_id == 'xyz-no-tags':
             return []
-        tag_1 = TagData(id='inital_tag_id', dataset_id=dataset_id, prev_tag_id=None,
-                        bit_mask_data="0xF", name='initial-tag', tot_size=4,
-                        created_at=1577836800, changes=dict())
-        tag_2 = TagData(id='query_tag_id_xyz', dataset_id=dataset_id, prev_tag_id="initial-tag",
-                        bit_mask_data="0xF", name='query_tag_name_xyz', tot_size=4,
-                        created_at=1577836800, changes=dict())
-        tag_3 = TagData(id='preselected_tag_id_xyz', dataset_id=dataset_id, prev_tag_id="initial-tag",
-                        bit_mask_data="0x1", name='preselected_tag_name_xyz', tot_size=4,
-                        created_at=1577836800, changes=dict())
-        tag_4 = TagData(id='selected_tag_xyz', dataset_id=dataset_id, prev_tag_id="preselected_tag_id_xyz",
-                        bit_mask_data="0x3", name='selected_tag_xyz', tot_size=4,
-                        created_at=1577836800, changes=dict())
-        tag_5 = TagData(id='tag_with_integer_name', dataset_id=dataset_id, prev_tag_id=None,
-                        bit_mask_data='0x1', name='1000', tot_size=4,
-                        created_at=1577836800, changes=dict())
+        tag_1 = TagData(id=get_random_MongoObjectID(), datasetId=dataset_id, prevTagId=None,
+                        bitMaskData="0xf", name='initial-tag', totSize=4,
+                        createdAt=1577836800, changes=dict())
+        tag_2 = TagData(id=get_random_MongoObjectID(), datasetId=dataset_id, prevTagId=get_random_MongoObjectID(),
+                        bitMaskData="0xf", name='query_tag_name_xyz', totSize=4,
+                        createdAt=1577836800, changes=dict())
+        tag_3 = TagData(id=get_random_MongoObjectID(), datasetId=dataset_id, prevTagId=get_random_MongoObjectID(),
+                        bitMaskData="0x1", name='preselected_tag_name_xyz', totSize=4,
+                        createdAt=1577836800, changes=dict())
+        tag_4 = TagData(id=get_random_MongoObjectID(), datasetId=dataset_id, prevTagId=get_random_MongoObjectID(),
+                        bitMaskData="0x3", name='sampled_tag_xyz', totSize=4,
+                        createdAt=1577836800, changes=dict())
+        tag_5 = TagData(id=get_random_MongoObjectID(), datasetId=dataset_id, prevTagId=None,
+                        bitMaskData='0x1', name='1000', totSize=4,
+                        createdAt=1577836800, changes=dict())
         tags = [tag_1, tag_2, tag_3, tag_4, tag_5]
         no_tags_to_return = getattr(self, "no_tags", 5)
         tags = tags[:no_tags_to_return]
         return tags
 
     def perform_tag_arithmetics(self, body: TagArithmeticsRequest, dataset_id, **kwargs):
-        _check_dataset_id(dataset_id)
+        
         if (body.new_tag_name is None) or (body.new_tag_name == ''):
-            return TagBitMaskResponse(bit_mask_data="0x2")
+            return TagBitMaskResponse(bitMaskData="0x2")
         else:
             return CreateEntityResponse(id="tag-arithmetic-created")
 
     def perform_tag_arithmetics_bitmask(self, body: TagArithmeticsRequest, dataset_id, **kwargs):
-        _check_dataset_id(dataset_id)
-        return TagBitMaskResponse(bit_mask_data="0x2")
+        
+        return TagBitMaskResponse(bitMaskData="0x2")
 
     def upsize_tags_by_dataset_id(self, body, dataset_id, **kwargs):
-        _check_dataset_id(dataset_id)
+        
         assert body.upsize_tag_creator == TagCreator.USER_PIP
 
     def create_tag_by_dataset_id(self, body, dataset_id, **kwargs):
-        _check_dataset_id(dataset_id)
-        tag = TagData(id='inital_tag_id', dataset_id=dataset_id, prev_tag_id=body['prev_tag_id'],
-                      bit_mask_data=body['bit_mask_data'], name=body['name'], tot_size=10,
-                      created_at=1577836800, changes=dict())
+        
+        tag = TagData(id='inital_tag_id', dataset_id=dataset_id, prevTagId=body['prevTagId'],
+                      bitMaskData=body['bitMaskData'], name=body['name'], totSize=10,
+                      createdAt=1577836800, changes=dict())
         return tag
 
     def delete_tag_by_tag_id(self, dataset_id, tag_id, **kwargs):
-        _check_dataset_id(dataset_id)
+        
         tags = self.get_tags_by_dataset_id(dataset_id)
         # assert that tag exists
         assert any([tag.id == tag_id for tag in tags])
         # assert that tag is a leaf
-        assert all([tag.prev_tag_id != tag_id for tag in tags])
+        assert all([tag.prevTagId != tag_id for tag in tags])
 
     def export_tag_to_label_studio_tasks(self, dataset_id: str, tag_id: str):
         return [{'id': 0, 'data': {'image': 'https://api.lightly.ai/v1/datasets/62383ab8f9cb290cd83ab5f9/samples/62383cb7e6a0f29e3f31e213/readurlRedirect?type=full&CENSORED', 'lightlyFileName': '2008_006249_jpg.rf.fdd64460945ca901aa3c7e48ffceea83.jpg', 'lightlyMetaInfo': {'type': 'IMAGE', 'datasetId': '62383ab8f9cb290cd83ab5f9', 'fileName': '2008_006249_jpg.rf.fdd64460945ca901aa3c7e48ffceea83.jpg', 'exif': {}, 'index': 0, 'createdAt': 1647852727873, 'lastModifiedAt': 1647852727873, 'metaData': {'sharpness': 27.31265790443818, 'sizeInBytes': 48224, 'snr': 2.1969673926211217, 'mean': [0.24441662557257224, 0.4460417517905863, 0.6960984853824035], 'shape': [167, 500, 3], 'std': [0.12448681278605961, 0.09509570033043004, 0.0763725998175394], 'sumOfSquares': [6282.243860049413, 17367.702452895475, 40947.22059208768], 'sumOfValues': [20408.78823530978, 37244.486274513954, 58124.22352943069]}}}}]
@@ -237,10 +231,8 @@ class MockedTagsApi(TagsApi):
 class MockedScoresApi(ScoresApi):
     def create_or_update_active_learning_score_by_tag_id(self, body, dataset_id, tag_id, **kwargs) -> \
             CreateEntityResponse:
-        _check_dataset_id(dataset_id)
-        if len(body.scores) > 0 and not isinstance(body.scores[0], float):
-            raise AttributeError
-        response_ = CreateEntityResponse(id="selected_tag_id_xyz")
+        test_scores = np.array(body.scores).astype(float)
+        response_ = CreateEntityResponse(id=get_random_MongoObjectID())
         return response_
 
 
@@ -281,31 +273,31 @@ class MockedSamplesApi(SamplesApi):
         return samples
 
     def create_sample_by_dataset_id(self, body, dataset_id, **kwargs):
-        _check_dataset_id(dataset_id)
+        
         assert isinstance(body, SampleCreateRequest)
         response_ = CreateEntityResponse(id="xyz")
         self.sample_create_requests.append(body)
         return response_
 
     def get_sample_image_write_url_by_id(self, dataset_id, sample_id, is_thumbnail, **kwargs):
-        _check_dataset_id(dataset_id)
+        
         url = f"{sample_id}_write_url"
         return url
 
     def get_sample_image_read_url_by_id(self, dataset_id, sample_id, type, **kwargs):
-        _check_dataset_id(dataset_id)
+        
         url = f"{sample_id}_write_url"
         return url
 
     def get_sample_image_write_urls_by_id(self, dataset_id, sample_id, **kwargs) -> SampleWriteUrls:
-        _check_dataset_id(dataset_id)
+        
         thumb_url = f"{sample_id}_thumb_write_url"
         full_url = f"{sample_id}_full_write_url"
         ret = SampleWriteUrls(full=full_url, thumb=thumb_url)
         return ret
 
     def update_sample_by_id(self, body, dataset_id, sample_id, **kwargs):
-        _check_dataset_id(dataset_id)
+        
         assert isinstance(body, SampleUpdateRequest)
 
 
@@ -315,13 +307,14 @@ class MockedDatasetsApi(DatasetsApi):
         self.default_datasets = [
             DatasetData(
                 name=f"dataset_{i}", 
-                id=f"dataset_{i}_id", 
-                last_modified_at=i,
-                type="", img_type="full", 
-                size_in_bytes=-1, 
-                n_samples=-1, 
-                created_at=-1,
-                user_id='user_0',
+                id=get_random_MongoObjectID(),
+                lastModifiedAt=i,
+                type=DatasetType("Crops"),
+                imgType="full",
+                sizeInBytes=0,
+                nSamples=0,
+                createdAt=0,
+                userId='user_0',
             )
             for i in range(no_datasets)
         ]
@@ -347,12 +340,12 @@ class MockedDatasetsApi(DatasetsApi):
         dataset = DatasetData(
             id=id, 
             name=body.name, 
-            last_modified_at=len(self.datasets) + 1,
+            lastModifiedAt=len(self.datasets) + 1,
             type="Images", 
-            size_in_bytes=-1, 
+            sizeInBytes=-1, 
             n_samples=-1, 
-            created_at=-1,
-            user_id='user_0',
+            createdAt=-1,
+            userId='user_0',
         )
         self.datasets += [dataset]
         response_ = CreateEntityResponse(id=id)
@@ -360,18 +353,18 @@ class MockedDatasetsApi(DatasetsApi):
 
 
     def get_dataset_by_id(self, dataset_id):
-        _check_dataset_id(dataset_id)
+        
         dataset = next((dataset for dataset in self.default_datasets if dataset_id == dataset.id), None)
         if dataset is None:
             raise ApiException()
         return dataset
 
     def register_dataset_upload_by_id(self, body, dataset_id):
-        _check_dataset_id(dataset_id)
+        
         return True
 
     def delete_dataset_by_id(self, dataset_id, **kwargs):
-        _check_dataset_id(dataset_id)
+        
         datasets_without_that_id = [dataset for dataset in self.datasets if dataset.id != dataset_id]
         assert len(datasets_without_that_id) == len(self.datasets) - 1
         self.datasets = datasets_without_that_id
@@ -388,8 +381,8 @@ class MockedDatasourcesApi(DatasourcesApi):
 
     def reset(self):
 
-        local_datasource = DatasourceConfigBase(type='LOCAL', full_path='').to_dict()
-        azure_datasource = DatasourceConfigBase(type='AZURE', full_path='').to_dict()
+        local_datasource = DatasourceConfigBase(type='DatasourceConfigLOCAL', fullPath='', purpose='INPUT')
+        azure_datasource = DatasourceConfigBase(type='DatasourceConfigAzure', fullPath='', purpose='INPUT', accountKey="asdf", accountName="asdf")
 
         self._datasources = {
             "dataset_id_xyz": local_datasource,
@@ -499,37 +492,37 @@ class MockedComputeWorkerApi(DockerApi):
         super().__init__(api_client=api_client)
         self._compute_worker_runs = [
             DockerRunData(
-                id="compute-worker-run-1",
-                docker_version="v1",
+                id=get_random_MongoObjectID(),
+                dockerVersion="v1",
                 dataset_id="dataset_id_xyz",
                 state=DockerRunState.TRAINING,
-                created_at=Timestamp(0),
-                last_modified_at=Timestamp(100),
-                message=None,
+                createdAt=Timestamp(0),
+                lastModifiedAt=Timestamp(100),
+                message="",
                 messages=[],
                 report_available=False,
             )
         ]
         self._scheduled_compute_worker_runs = [
             DockerRunScheduledData(
-                id="compute-worker-scheduled-run-1",
-                dataset_id="dataset_id_xyz",
-                config_id="config-id-1",
+                id=get_random_MongoObjectID(),
+                datasetId=get_random_MongoObjectID(),
+                configId=get_random_MongoObjectID(),
                 priority=DockerRunScheduledPriority.MID,
                 state=DockerRunScheduledState.OPEN,
-                created_at=Timestamp(0),
-                last_modified_at=Timestamp(100),
-                owner="user-id-1",
+                createdAt=Timestamp(0),
+                lastModifiedAt=Timestamp(100),
+                owner=get_random_MongoObjectID(),
             )
         ]
         self._registered_workers = [
             DockerWorkerRegistryEntryData(
-                id="worker-registry-id-1",
+                id=get_random_MongoObjectID(),
                 name="worker-name-1",
-                worker_type=DockerWorkerType.FULL,
+                workerType=DockerWorkerType.FULL,
                 state=DockerWorkerState.OFFLINE,
-                created_at=Timestamp(0),
-                last_modified_at=Timestamp(0),
+                createdAt=Timestamp(0),
+                lastModifiedAt=Timestamp(0),
             )
         ]
 
@@ -549,7 +542,7 @@ class MockedComputeWorkerApi(DockerApi):
 
     def create_docker_run_scheduled_by_dataset_id(self, body, dataset_id, **kwargs):
         assert isinstance(body, DockerRunScheduledCreateRequest)
-        _check_dataset_id(dataset_id)
+        
         return CreateEntityResponse(id=f'scheduled-run-id-123-dataset-{dataset_id}')
 
     def get_docker_runs(self, **kwargs):
@@ -659,5 +652,5 @@ class MockedApiWorkflowClient(ApiWorkflowClient):
 class MockedApiWorkflowSetup(unittest.TestCase):
     EMBEDDINGS_FILENAME_BASE: str = 'sample'
 
-    def setUp(self, token="token_xyz",  dataset_id="dataset_id_xyz") -> None:
+    def setUp(self, token="token_xyz",  dataset_id=get_random_MongoObjectID()) -> None:
         self.api_workflow_client = MockedApiWorkflowClient(token=token, dataset_id=dataset_id)
