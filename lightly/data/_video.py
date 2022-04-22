@@ -151,7 +151,13 @@ class VideoLoader(threading.local):
                     self.reader.seek(timestamp)
 
             # make sure we have the tensor in correct shape (we want H x W x C)
-            frame = next(self.reader)['data'].permute(1,2,0)
+            try:
+                frame = next(self.reader)['data'].permute(1,2,0)
+            except StopIteration as ex:
+                raise RuntimeError(
+                    f'StopIteration for frame {self.current_timestamp_idx} at '
+                    f'timestamp {timestamp} in video {self.path}'
+                ) from ex
             self.last_timestamp_idx = self.current_timestamp_idx
 
         else: # fallback on pyav
