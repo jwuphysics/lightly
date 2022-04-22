@@ -10,6 +10,7 @@ import numpy as np
 from requests import Response
 from lightly.openapi_generated.swagger_client.api.docker_api import DockerApi
 from lightly.openapi_generated.swagger_client.models.create_docker_worker_registry_entry_request import CreateDockerWorkerRegistryEntryRequest
+from lightly.openapi_generated.swagger_client.models.datasource_purpose import DatasourcePurpose
 from lightly.openapi_generated.swagger_client.models.datasource_processed_until_timestamp_response import DatasourceProcessedUntilTimestampResponse
 from lightly.openapi_generated.swagger_client.models.docker_run_data import DockerRunData
 from lightly.openapi_generated.swagger_client.models.docker_run_scheduled_create_request import DockerRunScheduledCreateRequest
@@ -21,7 +22,6 @@ from lightly.openapi_generated.swagger_client.models.docker_worker_config_create
 from lightly.openapi_generated.swagger_client.models.docker_worker_registry_entry_data import DockerWorkerRegistryEntryData
 from lightly.openapi_generated.swagger_client.models.docker_worker_state import DockerWorkerState
 from lightly.openapi_generated.swagger_client.models.docker_worker_type import DockerWorkerType
-
 from lightly.openapi_generated.swagger_client.models.tag_creator import TagCreator
 from lightly.openapi_generated.swagger_client.models.dataset_create_request import DatasetCreateRequest
 from lightly.openapi_generated.swagger_client.models.dataset_data import DatasetData
@@ -371,8 +371,16 @@ class MockedDatasourcesApi(DatasourcesApi):
 
     def reset(self):
 
-        local_datasource = DatasourceConfigBase(type='LOCAL', full_path='').to_dict()
-        azure_datasource = DatasourceConfigBase(type='AZURE', full_path='').to_dict()
+        local_datasource = DatasourceConfigBase(
+            purpose=DatasourcePurpose.INPUT_OUTPUT,
+            type='LOCAL', 
+            full_path='',
+        ).to_dict()
+        azure_datasource = DatasourceConfigBase(
+            purpose=DatasourcePurpose.INPUT_OUTPUT,
+            type='AZURE', 
+            full_path='',
+        ).to_dict()
 
         self._datasources = {
             "dataset_id_xyz": local_datasource,
