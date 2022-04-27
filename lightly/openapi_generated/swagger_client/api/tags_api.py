@@ -14,6 +14,7 @@ from lightly.openapi_generated.swagger_client.api_client import ApiClient
 from lightly.openapi_generated.swagger_client.api.tags_api_endpoints.create_initial_tag_by_dataset_id import CreateInitialTagByDatasetId
 from lightly.openapi_generated.swagger_client.api.tags_api_endpoints.create_tag_by_dataset_id import CreateTagByDatasetId
 from lightly.openapi_generated.swagger_client.api.tags_api_endpoints.delete_tag_by_tag_id import DeleteTagByTagId
+from lightly.openapi_generated.swagger_client.api.tags_api_endpoints.export_tag_to_basic_filenames import ExportTagToBasicFilenames
 from lightly.openapi_generated.swagger_client.api.tags_api_endpoints.export_tag_to_label_box_data_rows import ExportTagToLabelBoxDataRows
 from lightly.openapi_generated.swagger_client.api.tags_api_endpoints.export_tag_to_label_studio_tasks import ExportTagToLabelStudioTasks
 from lightly.openapi_generated.swagger_client.api.tags_api_endpoints.export_tag_to_sama_tasks import ExportTagToSamaTasks
@@ -30,6 +31,7 @@ class TagsApi(
     CreateInitialTagByDatasetId,
     CreateTagByDatasetId,
     DeleteTagByTagId,
+    ExportTagToBasicFilenames,
     ExportTagToLabelBoxDataRows,
     ExportTagToLabelStudioTasks,
     ExportTagToSamaTasks,
