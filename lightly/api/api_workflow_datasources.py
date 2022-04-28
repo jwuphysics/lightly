@@ -1,10 +1,17 @@
 import time
 from typing import List, Optional, Tuple
 
-
 from lightly.openapi_generated.swagger_client.model.datasource_config import DatasourceConfig
+from lightly.openapi_generated.swagger_client.model.datasource_config_azure import \
+    DatasourceConfigAzure
+from lightly.openapi_generated.swagger_client.model.datasource_config_base import \
+    DatasourceConfigBase
+from lightly.openapi_generated.swagger_client.model.datasource_config_s3 import \
+    DatasourceConfigS3
 from lightly.openapi_generated.swagger_client.model.datasource_processed_until_timestamp_request import DatasourceProcessedUntilTimestampRequest
 from lightly.openapi_generated.swagger_client.model.datasource_processed_until_timestamp_response import DatasourceProcessedUntilTimestampResponse
+from lightly.openapi_generated.swagger_client.model.datasource_purpose import \
+    DatasourcePurpose
 from lightly.openapi_generated.swagger_client.model.datasource_raw_samples_data import DatasourceRawSamplesData
 from lightly.openapi_generated.swagger_client.model.datasource_raw_samples_predictions_data import DatasourceRawSamplesPredictionsData
 
@@ -31,19 +38,19 @@ class _DatasourcesMixin:
         if to is None:
             to = int(time.time())
         response: DatasourceRawSamplesData = self._datasources_api.get_list_of_raw_samples_from_datasource_by_dataset_id(
-            dataset_id=self.dataset_id,
+            datasetId=self.dataset_id,
             _from=from_,
             to=to,
         )
         cursor = response.cursor
         samples = response.data
-        while response.has_more:
+        while response.hasMore:
             response: DatasourceRawSamplesData = self._datasources_api.get_list_of_raw_samples_from_datasource_by_dataset_id(
-                dataset_id=self.dataset_id, cursor=cursor
+                datasetId=self.dataset_id, cursor=cursor
             )
             cursor = response.cursor
-            samples.extend(response.data)
-        samples = [(s.file_name, s.read_url) for s in samples]
+            samples += response.data
+        samples = [(s.fileName, s.readUrl) for s in samples]
         return samples
 
     def download_new_raw_samples(self) -> List[Tuple[str, str]]:
@@ -78,10 +85,10 @@ class _DatasourcesMixin:
         """
         response: DatasourceProcessedUntilTimestampResponse = (
             self._datasources_api.get_datasource_processed_until_timestamp_by_dataset_id(
-                dataset_id=self.dataset_id
+                datasetId=self.dataset_id
             )
         )
-        timestamp = int(response.processed_until_timestamp)
+        timestamp = int(response.processedUntilTimestamp)
         return timestamp
 
     def update_processed_until_timestamp(self, timestamp: int) -> None:
@@ -92,10 +99,10 @@ class _DatasourcesMixin:
                 Unix timestamp of last processed sample
         """
         body = DatasourceProcessedUntilTimestampRequest(
-            processed_until_timestamp=timestamp
+            processedUntilTimestamp=timestamp
         )
         self._datasources_api.update_datasource_processed_until_timestamp_by_dataset_id(
-            dataset_id=self.dataset_id, body=body
+            datasetId=self.dataset_id, body=body
         )
 
     def get_datasource(self) -> DatasourceConfig:
@@ -137,15 +144,15 @@ class _DatasourcesMixin:
                 Set to None to disable thumbnails and use the full images from the 
                 datasource instead.
         """
-        # TODO: Use DatasourceConfigAzure once we switch/update the api generator.
         self._datasources_api.update_datasource_by_dataset_id(
-            body={
-                'type': 'AZURE',
-                'fullPath': container_name,
-                'thumbSuffix': thumbnail_suffix,
-                'accountName': account_name,
-                'accountKey': sas_token,
-            },
+            DatasourceConfigAzure(
+                type="DatasourceConfigAzure",
+                fullPath=container_name,
+                thumbSuffix=thumbnail_suffix,
+                accountName=account_name,
+                accountKey=sas_token,
+                purpose=DatasourcePurpose.INPUT_OUTPUT,
+            ),
             dataset_id=self.dataset_id,
         )
 
@@ -243,16 +250,16 @@ class _DatasourcesMixin:
                 datasource instead.
 
         """
-        # TODO: Use DatasourceConfigS3 once we switch/update the api generator.
         self._datasources_api.update_datasource_by_dataset_id(
-            body={
-                'type': 'S3',
-                'fullPath': resource_path,
-                'thumbSuffix': thumbnail_suffix,
-                's3Region': region,
-                's3AccessKeyId': access_key,
-                's3SecretAccessKey': secret_access_key,
-            },
+            body=DatasourceConfigS3(
+                type='DatasourceConfigS3',
+                fullPath=resource_path,
+                thumbSuffix=thumbnail_suffix,
+                s3Region=region,
+                s3AccessKeyId=access_key,
+                s3SecretAccessKey=secret_access_key,
+                purpose="INPUT_OUTPUT",
+            ),
             dataset_id=self.dataset_id,
         )
 
@@ -307,13 +314,13 @@ class _DatasourcesMixin:
         )
         cursor = response.cursor
         samples = response.data
-        while response.has_more:
+        while response.hasMore:
             response: DatasourceRawSamplesPredictionsData = self._datasources_api.get_list_of_raw_samples_predictions_from_datasource_by_dataset_id(
                 self.dataset_id,
                 task_name,
                 cursor=cursor
             )
             cursor = response.cursor
-            samples.extend(response.data)
-        samples = [(s.file_name, s.read_url) for s in samples]
+            samples += response.data
+        samples = [(s.fileName, s.readUrl) for s in samples]
         return samples

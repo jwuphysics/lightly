@@ -394,26 +394,26 @@ class MockedDatasourcesApi(DatasourcesApi):
     def _default_samples(self):
         return [
             DatasourceRawSamplesDataRow(
-                file_name=f"file_{i}", read_url=f"url_{i}"
+                fileName=f"file_{i}", readUrl=f"url_{i}"
             )
             for i in range(self._num_samples)
         ]
 
-    def get_datasource_by_dataset_id(self, dataset_id: str, **kwargs):
+    def get_datasource_by_dataset_id(self, datasetId: str, **kwargs):
         try:
-            datasource = self._datasources[dataset_id]
+            datasource = self._datasources[datasetId]
             return datasource
         except Exception:
             raise ApiException()
 
     def get_datasource_processed_until_timestamp_by_dataset_id(
-        self, dataset_id: str, **kwargs
+        self, datasetId: str, **kwargs
     ) -> DatasourceProcessedUntilTimestampResponse:
-        timestamp = self._processed_until_timestamp[dataset_id]
-        return DatasourceProcessedUntilTimestampResponse(timestamp)
+        timestamp = self._processed_until_timestamp[datasetId]
+        return DatasourceProcessedUntilTimestampResponse(processedUntilTimestamp=timestamp)
 
     def get_list_of_raw_samples_from_datasource_by_dataset_id(
-        self, dataset_id, cursor: str = None, _from: int = None, to: int = None, **kwargs
+        self, datasetId, cursor: str = None, _from: int = None, to: int = None, **kwargs
     ) -> DatasourceRawSamplesData:
         if cursor is None:
             # initial request
@@ -428,13 +428,13 @@ class MockedDatasourcesApi(DatasourcesApi):
             to = cursor_dict["to"]
 
         next_current = min(current + self._max_return_samples, to + 1)
-        samples = self._samples[dataset_id][current:next_current]
+        samples = self._samples[datasetId][current:next_current]
         cursor_dict["current"] = next_current
         cursor = json.dumps(cursor_dict)
         has_more = len(samples) > 0
 
         return DatasourceRawSamplesData(
-            has_more=has_more,
+            hasMore=has_more,
             cursor=cursor,
             data=samples,
         )
@@ -462,7 +462,7 @@ class MockedDatasourcesApi(DatasourcesApi):
         has_more = len(samples) > 0
 
         return DatasourceRawSamplesPredictionsData(
-            has_more=has_more,
+            hasMore=has_more,
             cursor=cursor,
             data=samples,
         )    
@@ -475,16 +475,15 @@ class MockedDatasourcesApi(DatasourcesApi):
     def update_datasource_by_dataset_id(
         self, body: DatasourceConfig, dataset_id: str, **kwargs
     ) -> None:
-        # TODO: Enable assert once we switch/update to new api code generator.
-        # assert isinstance(body, DatasourceConfig)
+        assert body.type in body._discriminator['type'].keys()
         self._datasources[dataset_id] = body # type: ignore
 
     def update_datasource_processed_until_timestamp_by_dataset_id(
-        self, body, dataset_id, **kwargs
+        self, body, datasetId, **kwargs
     ) -> None:
         assert isinstance(body, DatasourceProcessedUntilTimestampRequest)
-        to = body.processed_until_timestamp
-        self._processed_until_timestamp[dataset_id] = to # type: ignore
+        to = body.processedUntilTimestamp
+        self._processed_until_timestamp[datasetId] = to # type: ignore
 
 
 class MockedComputeWorkerApi(DockerApi):
